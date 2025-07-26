@@ -1,8 +1,10 @@
 # NetworkDraw
 
-A sophisticated web-based tensor network diagram editor for creating and manipulating tensor diagrams with automatic code generation for tensor operations. NetworkDraw allows you to visually design tensor networks and automatically generates the corresponding tensor operation code.
+A web-based tensor network diagram editor for creating and manipulating tensor diagrams with automatic code generation for tensor operations. NetworkDraw allows you to visually design tensor networks and automatically generates the corresponding tensor operation code.
 
-*This application was vibecoded with Claude, an AI coding assistant.*
+Inspired by [TensorTrace](https://www.tensortrace.com/).
+
+*This application (including README file) was vibecoded with Claude, an AI coding assistant via cursor app.*
 
 ## Features
 
