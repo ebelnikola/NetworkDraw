@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contraction Validation Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #001484;
+            color: #ccc;
+        }
+        .test-info {
+            background: #222;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .test-info h2 {
+            color: #4ecdc4;
+            margin-top: 0;
+        }
+        .test-info ul {
+            color: #ccc;
+        }
+        .test-info li {
+            margin: 8px 0;
+        }
+        .error-example {
+            background: #d32f2f;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+        .success-example {
+            background: #388e3c;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+        .color-example {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #000;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        .in-leg-example {
+            background-color: #ff6b6b;
+            border-color: #cc0000;
+        }
+        .out-leg-example {
+            background-color: #4ecdc4;
+            border-color: #006666;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-info">
+        <h2>Contraction Validation Feature Test</h2>
+        <p>This feature has been successfully implemented in the NetworkDraw application. Here's what was added:</p>
+        
+        <h3>New Validation Rules:</h3>
+        <ul>
+            <li><strong>Valid Contractions:</strong> Only in-legs can be connected to out-legs</li>
+            <li><strong>Invalid Contractions:</strong> 
+                <ul>
+                    <li>In-leg to in-leg connections are blocked</li>
+                    <li>Out-leg to out-leg connections are blocked</li>
+                </ul>
+            </li>
+            <li><strong>Visual Feedback:</strong> Error messages appear when invalid contractions are attempted</li>
+        </ul>
+        
+        <h3>Leg Type Colors:</h3>
+        <ul>
+            <li><span class="color-example in-leg-example"></span>In-legs: <strong>Red</strong></li>
+            <li><span class="color-example out-leg-example"></span>Out-legs: <strong>Teal</strong></li>
+        </ul>
+        
+        <h3>Test Scenarios:</h3>
+        
+        <h4>✅ Valid Contractions (Will Work):</h4>
+        <div class="success-example">
+            • In-leg → Out-leg<br>
+            • Out-leg → In-leg<br>
+            • Unclassified leg → Any leg type<br>
+            • Any leg type → Free node
+        </div>
+        
+        <h4>❌ Invalid Contractions (Will Show Error):</h4>
+        <div class="error-example">
+            • In-leg → In-leg<br>
+            • Out-leg → Out-leg
+        </div>
+        
+        <h3>How to Test:</h3>
+        <ol>
+            <li>Open the main NetworkDraw application (index.html)</li>
+            <li>Create two tensors using the circle or rectangle tool</li>
+            <li>Right-click on each tensor and set up different leg classifications:
+                <ul>
+                    <li>Set "Leg Threshold" to different values (e.g., "2" for first tensor, "1" for second tensor)</li>
+                    <li>This will create different in/out leg distributions</li>
+                </ul>
+            </li>
+            <li>Click the bond tool (🔗) to enter bond creation mode</li>
+            <li>Try connecting different leg types:
+                <ul>
+                    <li><strong>Valid:</strong> Click on a red leg (in-leg), then click on a teal leg (out-leg)</li>
+                    <li><strong>Invalid:</strong> Click on a red leg (in-leg), then click on another red leg (in-leg)</li>
+                </ul>
+            </li>
+            <li>Observe the error message that appears for invalid contractions</li>
+        </ol>
+        
+        <h3>Error Message Features:</h3>
+        <ul>
+            <li><strong>Animated Display:</strong> Error messages fade in and out smoothly</li>
+            <li><strong>Detailed Information:</strong> Shows the specific leg numbers and types</li>
+            <li><strong>Auto-dismiss:</strong> Messages disappear after 3 seconds</li>
+            <li><strong>Clear Instructions:</strong> Explains the contraction rules</li>
+        </ul>
+        
+        <h3>Technical Implementation:</h3>
+        <ul>
+            <li>Added <code>getLegType()</code> helper function using threshold-based classification</li>
+            <li>Modified <code>handleLegSelectionForBond()</code> to validate contractions</li>
+            <li>Added <code>showContractionError()</code> method for user feedback</li>
+            <li>Updated bond tool tooltip to indicate the restriction</li>
+            <li>Simplified leg classification using single threshold value</li>
+        </ul>
+    </div>
+    
+    <p><strong>Note:</strong> This is a test page. To use the actual feature, open <code>index.html</code> in your browser.</p>
+</body>
+</html> 

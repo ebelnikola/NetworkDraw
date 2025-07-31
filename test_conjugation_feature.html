@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tensor Conjugation Feature Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #001484;
+            color: #ccc;
+        }
+        .test-info {
+            background: #222;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .test-info h2 {
+            color: #4ecdc4;
+            margin-top: 0;
+        }
+        .test-info ul {
+            color: #ccc;
+        }
+        .test-info li {
+            margin: 8px 0;
+        }
+        .conjugation-example {
+            background: #333;
+            color: #ccc;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-family: monospace;
+            border-left: 4px solid #ff6b6b;
+        }
+        .color-example {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #000;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        .in-leg-example {
+            background-color: #ff6b6b;
+            border-color: #cc0000;
+        }
+        .out-leg-example {
+            background-color: #4ecdc4;
+            border-color: #006666;
+        }
+        .rule-box {
+            background: #2d3748;
+            border: 1px solid #4a5568;
+            border-radius: 6px;
+            padding: 12px;
+            margin: 10px 0;
+        }
+        .rule-box strong {
+            color: #4ecdc4;
+        }
+        .before-after {
+            display: flex;
+            gap: 20px;
+            margin: 15px 0;
+        }
+        .before, .after {
+            flex: 1;
+            background: #333;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #4ecdc4;
+        }
+        .after {
+            border-left-color: #ff6b6b;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-info">
+        <h2>Tensor Conjugation Feature</h2>
+        <p>The conjugation feature allows you to transform a tensor by swapping its in and out legs while toggling a prime (') in its name.</p>
+        
+        <h3>What Conjugation Does:</h3>
+        <ul>
+            <li><strong>Name Change:</strong> Toggles prime (') in the tensor name (adds if absent, removes if present)</li>
+            <li><strong>Leg Relabeling:</strong> Swaps in and out leg numbers</li>
+            <li><strong>Separator Update:</strong> Updates the leg separator accordingly</li>
+            <li><strong>Visual Update:</strong> Colors update to reflect the new leg types</li>
+            <li><strong>Reversible:</strong> Applying conjugation twice returns to the original state</li>
+        </ul>
+        
+        <h3>Conjugation Rules:</h3>
+        <div class="rule-box">
+            <strong>Given:</strong> Tensor with n out-legs and m in-legs (separator = n)<br>
+            <strong>After conjugation:</strong>
+            <ul>
+                <li>Old out-legs (1...n) → New in-legs (m+1...m+n)</li>
+                <li>Old in-legs (n+1...n+m) → New out-legs (1...m)</li>
+                <li>New separator = m (number of old in-legs)</li>
+                <li>Name toggles prime: "T" → "T'" or "T'" → "T"</li>
+            </ul>
+        </div>
+        
+        <h3>Example: 4-Leg Tensor with Separator = 2</h3>
+        <div class="before-after">
+            <div class="before">
+                <strong>Before Conjugation:</strong><br>
+                • Name: "T"<br>
+                • Separator: 2<br>
+                • Leg 1: <span class="color-example out-leg-example"></span>Out-leg (teal)<br>
+                • Leg 2: <span class="color-example out-leg-example"></span>Out-leg (teal)<br>
+                • Leg 3: <span class="color-example in-leg-example"></span>In-leg (red)<br>
+                • Leg 4: <span class="color-example in-leg-example"></span>In-leg (red)
+            </div>
+            <div class="after">
+                <strong>After Conjugation:</strong><br>
+                • Name: "T'"<br>
+                • Separator: 2<br>
+                • Leg 1: <span class="color-example out-leg-example"></span>Out-leg (teal)<br>
+                • Leg 2: <span class="color-example out-leg-example"></span>Out-leg (teal)<br>
+                • Leg 3: <span class="color-example in-leg-example"></span>In-leg (red)<br>
+                • Leg 4: <span class="color-example in-leg-example"></span>In-leg (red)
+            </div>
+        </div>
+        
+        <h3>Name Generation:</h3>
+        <div class="conjugation-example">
+            <strong>Automatic Name Assignment:</strong><br>
+            • If tensor has no name → Assigns "T1", "T2", etc.<br>
+            • If tensor has name without prime → Adds prime (e.g., "A" → "A'")<br>
+            • If tensor has name with prime → Removes prime (e.g., "A'" → "A")<br>
+            • Conjugation is reversible: "A" ↔ "A'"
+        </div>
+        
+        <h3>How to Use:</h3>
+        <ol>
+            <li><strong>Create a tensor</strong> with some legs classified as in/out</li>
+            <li><strong>Right-click</strong> on the tensor to open context menu</li>
+            <li><strong>Click "Conjugate Tensor"</strong> button</li>
+            <li><strong>Observe changes:</strong>
+                <ul>
+                    <li>Name toggles prime symbol</li>
+                    <li>Leg numbers are relabeled</li>
+                    <li>Colors update to show new in/out classification</li>
+                    <li>Separator value updates</li>
+                </ul>
+            </li>
+        </ol>
+        
+        <h3>Mathematical Interpretation:</h3>
+        <ul>
+            <li><strong>Tensor Conjugation:</strong> Represents the adjoint/transpose operation</li>
+            <li><strong>Leg Swapping:</strong> Exchanges input and output indices</li>
+            <li><strong>Prime Notation:</strong> Standard notation for conjugated tensors</li>
+            <li><strong>Contraction Rules:</strong> Maintained - still only in→out connections allowed</li>
+        </ul>
+        
+        <h3>Technical Implementation:</h3>
+        <ul>
+            <li><code>conjugateTensor()</code> method handles the transformation</li>
+            <li>Global <code>nextTensorNumber</code> counter ensures unique names</li>
+            <li>Leg mapping algorithm preserves all leg properties</li>
+            <li>Context menu updates automatically after conjugation</li>
+            <li>Save/load functionality preserves conjugated state</li>
+        </ul>
+        
+        <h3>Use Cases:</h3>
+        <ul>
+            <li><strong>Quantum Circuits:</strong> Creating adjoint operations</li>
+            <li><strong>Tensor Networks:</strong> Building complex contractions</li>
+            <li><strong>Matrix Operations:</strong> Representing transposed matrices</li>
+            <li><strong>Physical Systems:</strong> Modeling time-reversed processes</li>
+        </ul>
+    </div>
+    
+    <p><strong>Note:</strong> This is a test page. To use the actual feature, open <code>index.html</code> in your browser.</p>
+</body>
+</html> 

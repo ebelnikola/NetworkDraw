@@ -69,6 +69,9 @@ class TensorLegDrawer {
         // Track last file handle for Save/Save As
         this.lastFileHandle = null;
         
+        // Counter for generating unique tensor names (used in conjugation and code generation)
+        this.nextTensorNumber = 1;
+        
         // Undo functionality
         this.history = [];
         this.historyIndex = -1;
@@ -260,10 +263,12 @@ class TensorLegDrawer {
         // Context menu events
         document.getElementById('contextNodeCount').addEventListener('change', this.updateTensorLegs.bind(this));
         document.getElementById('contextTensorName').addEventListener('input', this.updateTensorName.bind(this));
+        document.getElementById('contextLegThreshold').addEventListener('input', this.updateTensorLegThreshold.bind(this));
         document.getElementById('contextColor').addEventListener('change', this.updateTensorColor.bind(this));
         document.getElementById('rotateBtn').addEventListener('click', this.rotateTensor.bind(this));
         document.getElementById('reflectVerticalBtn').addEventListener('click', this.reflectTensorVertical.bind(this));
         document.getElementById('reflectHorizontalBtn').addEventListener('click', this.reflectTensorHorizontal.bind(this));
+        document.getElementById('conjugateBtn').addEventListener('click', this.conjugateTensor.bind(this));
         document.getElementById('deleteCircleBtn').addEventListener('click', this.deleteSelectedTensor.bind(this));
         
         // Prevent context menu from closing when clicking inside it
@@ -343,6 +348,67 @@ class TensorLegDrawer {
         this.render();
     }
     
+    // Helper function to determine leg type
+    getLegType(tensor, leg) {
+        if (leg.number <= tensor.legThreshold) {
+            return 'out';
+        } else {
+            return 'in';
+        }
+    }
+    
+    // Show error message for invalid contractions
+    showContractionError(firstLegType, secondLegType, secondLegNumber) {
+        const firstLegNumber = this.firstLegForBond.leg.number;
+        
+        const message = `Invalid contraction: Cannot connect ${firstLegType}-leg (${firstLegNumber}) to ${secondLegType}-leg (${secondLegNumber}). Only in-legs can be connected to out-legs.`;
+        
+        // Create a temporary error message overlay
+        const errorDiv = document.createElement('div');
+        errorDiv.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #d32f2f;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            z-index: 10000;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            max-width: 400px;
+            text-align: center;
+            animation: fadeInOut 3s ease-in-out;
+        `;
+        
+        // Add CSS animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeInOut {
+                0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+                20% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+                80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+                100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+            }
+        `;
+        
+        errorDiv.textContent = message;
+        document.head.appendChild(style);
+        document.body.appendChild(errorDiv);
+        
+        // Remove the error message after 3 seconds
+        setTimeout(() => {
+            if (errorDiv.parentNode) {
+                errorDiv.parentNode.removeChild(errorDiv);
+            }
+            if (style.parentNode) {
+                style.parentNode.removeChild(style);
+            }
+        }, 3000);
+    }
+    
     handleLegSelectionForBond(tensor, leg) {
         if (!this.firstLegForBond) {
             // First leg selected
@@ -359,6 +425,24 @@ class TensorLegDrawer {
             // Second leg selected - create the bond
             if (this.firstLegForBond.tensor !== tensor || this.firstLegForBond.leg !== leg) {
                 // Don't allow connecting a leg to itself
+
+                // Check leg type compatibility for contraction
+                const firstLegType = this.getLegType(this.firstLegForBond.tensor, this.firstLegForBond.leg);
+                const secondLegType = this.getLegType(tensor, leg);
+                
+                // Only allow contractions between in and out legs
+                if ((firstLegType === 'in' && secondLegType === 'in') || 
+                    (firstLegType === 'out' && secondLegType === 'out')) {
+                    // Show error message for invalid contraction
+                    this.showContractionError(firstLegType, secondLegType, leg.number);
+                    
+                    // Reset bond creation state
+                    this.firstLegForBond = null;
+                    this.previewBondEnd = null;
+                    this.bondToDelete = null;
+                    this.render();
+                    return;
+                }
 
                 // Delete any existing bond from the source leg
                 const existingBond1 = this.findBondFromLeg(this.firstLegForBond);
@@ -695,7 +779,8 @@ class TensorLegDrawer {
             color: '#ffffff', // Default white color
             name: tensorName,
             rotation: 0, // Rotation angle in radians
-            legs: []
+            legs: [],
+            legThreshold: 0 // Threshold: legs ≤ threshold are out-legs, legs > threshold are in-legs
         };
         
         // Set properties based on tensor type
@@ -752,6 +837,9 @@ class TensorLegDrawer {
                 number: i + 1
             });
         }
+        
+        // By default, all legs are in-legs (threshold = 0)
+        tensor.legThreshold = 0;
         
         this.tensors.push(tensor);
         this.render();
@@ -825,6 +913,8 @@ class TensorLegDrawer {
         const hatchSpacing = 6;
         
         this.ctx.save();
+        
+        // Create clipping path for the circle in world coordinates
         this.ctx.beginPath();
         this.ctx.arc(x, y, radius, 0, 2 * Math.PI);
         this.ctx.clip();
@@ -833,7 +923,7 @@ class TensorLegDrawer {
         this.ctx.lineWidth = 1;
         this.ctx.globalAlpha = 0.4;
         
-        // Draw parallel diagonal hatching from top-left to bottom-right
+        // Draw parallel diagonal hatching from top-left to bottom-right (absolute angle)
         for (let i = -radius * 2; i <= radius * 2; i += hatchSpacing) {
             this.ctx.beginPath();
             this.ctx.moveTo(x + i, y - radius);
@@ -851,6 +941,8 @@ class TensorLegDrawer {
         const halfHeight = height / 2;
 
         this.ctx.save();
+        
+        // Create clipping path for the rectangle in world coordinates
         this.ctx.beginPath();
         this.ctx.rect(x - halfWidth, y - halfHeight, width, height);
         this.ctx.clip();
@@ -859,11 +951,74 @@ class TensorLegDrawer {
         this.ctx.lineWidth = 1;
         this.ctx.globalAlpha = 0.4;
 
-        // Draw only parallel diagonal hatching from top-left to bottom-right
+        // Draw only parallel diagonal hatching from top-left to bottom-right (absolute angle)
         for (let i = -halfWidth * 2; i <= halfWidth * 2; i += hatchSpacing) {
             this.ctx.beginPath();
             this.ctx.moveTo(x + i, y - halfHeight);
             this.ctx.lineTo(x + i + halfWidth, y + halfHeight);
+            this.ctx.stroke();
+        }
+
+        this.ctx.restore();
+        this.ctx.globalAlpha = 1;
+    }
+
+    drawRotatedRectangleHatching(x, y, width, height, rotation, color) {
+        const hatchSpacing = 6;
+        const halfWidth = width / 2;
+        const halfHeight = height / 2;
+
+        this.ctx.save();
+        
+        // Create clipping path for the rotated rectangle
+        this.ctx.translate(x, y);
+        this.ctx.rotate(rotation);
+        this.ctx.beginPath();
+        this.ctx.rect(-halfWidth, -halfHeight, width, height);
+        this.ctx.clip();
+        
+        // Reset transformations to draw hatching in world coordinates (absolute angle)
+        this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+        this.ctx.translate(this.panX, this.panY);
+        this.ctx.scale(this.zoom, this.zoom);
+
+        this.ctx.strokeStyle = color;
+        this.ctx.lineWidth = 1;
+        this.ctx.globalAlpha = 0.4;
+
+        // Calculate the bounding box of the rotated rectangle to ensure we cover the entire area
+        const cosRot = Math.cos(rotation);
+        const sinRot = Math.sin(rotation);
+        const corners = [
+            { x: -halfWidth, y: -halfHeight },
+            { x: halfWidth, y: -halfHeight },
+            { x: halfWidth, y: halfHeight },
+            { x: -halfWidth, y: halfHeight }
+        ];
+        
+        // Transform corners to world coordinates
+        const worldCorners = corners.map(corner => ({
+            x: x + corner.x * cosRot - corner.y * sinRot,
+            y: y + corner.x * sinRot + corner.y * cosRot
+        }));
+        
+        // Find the bounding box
+        const minX = Math.min(...worldCorners.map(c => c.x));
+        const maxX = Math.max(...worldCorners.map(c => c.x));
+        const minY = Math.min(...worldCorners.map(c => c.y));
+        const maxY = Math.max(...worldCorners.map(c => c.y));
+        
+        // Calculate the diagonal distance to ensure complete coverage
+        const diagonalDistance = Math.sqrt((maxX - minX) ** 2 + (maxY - minY) ** 2);
+        
+        // Draw hatching lines that cover the entire bounding box with proper diagonal coverage
+        const startX = minX - diagonalDistance;
+        const endX = maxX + diagonalDistance;
+        
+        for (let i = startX; i <= endX; i += hatchSpacing) {
+            this.ctx.beginPath();
+            this.ctx.moveTo(i, minY - diagonalDistance);
+            this.ctx.lineTo(i + diagonalDistance, maxY + diagonalDistance);
             this.ctx.stroke();
         }
 
@@ -1708,6 +1863,7 @@ class TensorLegDrawer {
         // Update context menu values
         document.getElementById('contextNodeCount').value = tensor.legs.length;
         document.getElementById('contextTensorName').value = tensor.name;
+        document.getElementById('contextLegThreshold').value = tensor.legThreshold || 0;
         document.getElementById('contextColor').value = tensor.color;
         
         // Position and show context menu
@@ -1726,6 +1882,9 @@ class TensorLegDrawer {
         
         const newLegCount = parseInt(document.getElementById('contextNodeCount').value);
         const tensor = this.contextMenuTensor;
+        
+        // Store current threshold
+        const oldThreshold = tensor.legThreshold || 0;
         
         // Clear existing legs
         tensor.legs = [];
@@ -1796,6 +1955,12 @@ class TensorLegDrawer {
             }
         }
         
+        // Restore threshold, but cap it at the new leg count
+        tensor.legThreshold = Math.min(oldThreshold, newLegCount);
+        
+        // Update the context menu field to reflect the changes
+        document.getElementById('contextLegThreshold').value = tensor.legThreshold;
+        
         this.render();
         this.saveStateToHistory();
         this.saveToLocalStorage();
@@ -1806,6 +1971,16 @@ class TensorLegDrawer {
         
         const newName = document.getElementById('contextTensorName').value.trim();
         this.contextMenuTensor.name = newName;
+        this.render();
+        this.saveStateToHistory();
+        this.saveToLocalStorage();
+    }
+    
+    updateTensorLegThreshold() {
+        if (!this.contextMenuTensor) return;
+        
+        const threshold = parseInt(document.getElementById('contextLegThreshold').value) || 0;
+        this.contextMenuTensor.legThreshold = Math.max(0, threshold);
         this.render();
         this.saveStateToHistory();
         this.saveToLocalStorage();
@@ -1897,6 +2072,61 @@ class TensorLegDrawer {
         this.saveToLocalStorage();
     }
     
+    conjugateTensor() {
+        if (!this.contextMenuTensor) return;
+        
+        const tensor = this.contextMenuTensor;
+        const totalLegs = tensor.legs.length;
+        const separator = tensor.legThreshold || 0;
+        const outLegs = separator;
+        const inLegs = totalLegs - separator;
+        
+        // 1. Handle tensor name
+        if (!tensor.name || tensor.name.trim() === '') {
+            // Generate unique name T# if no name exists
+            tensor.name = `T${this.nextTensorNumber++}`;
+        }
+        
+        // Handle prime in the name (add or remove)
+        if (tensor.name.endsWith("'")) {
+            // Remove the prime if it exists
+            tensor.name = tensor.name.slice(0, -1);
+        } else {
+            // Add prime if it doesn't exist
+            tensor.name += "'";
+        }
+        
+        // 2. Relabel legs and update separator
+        // Create a mapping for the new leg numbers
+        const legMapping = [];
+        
+        // Old out-legs (1...n) become new in-legs (m+1...m+n)
+        for (let i = 1; i <= outLegs; i++) {
+            legMapping[i] = inLegs + i;
+        }
+        
+        // Old in-legs (n+1...n+m) become new out-legs (1...m)
+        for (let i = 1; i <= inLegs; i++) {
+            legMapping[outLegs + i] = i;
+        }
+        
+        // Apply the mapping to leg numbers
+        for (let leg of tensor.legs) {
+            leg.number = legMapping[leg.number];
+        }
+        
+        // 3. Update the separator
+        tensor.legThreshold = inLegs;
+        
+        // 4. Update the context menu fields
+        document.getElementById('contextTensorName').value = tensor.name;
+        document.getElementById('contextLegThreshold').value = tensor.legThreshold;
+        
+        this.render();
+        this.saveStateToHistory();
+        this.saveToLocalStorage();
+    }
+    
     deselectBond() {
         this.selectedBond = null;
         this.isBondSelected = false;
@@ -1947,6 +2177,7 @@ class TensorLegDrawer {
             color: tensor.color,
             name: tensor.name,
             rotation: tensor.rotation,
+            legThreshold: tensor.legThreshold || 0,
             legs: tensor.legs.map(leg => ({
                 id: leg.id,
                 angle: leg.angle,
@@ -1980,6 +2211,7 @@ class TensorLegDrawer {
             color: this.clipboard.color,
             name: this.clipboard.name,
             rotation: this.clipboard.rotation,
+            legThreshold: this.clipboard.legThreshold || 0,
             legs: []
         };
         // Copy size properties
@@ -2078,15 +2310,15 @@ class TensorLegDrawer {
             this.ctx.lineWidth = 2;
             this.ctx.stroke();
             
-            // Draw tensor hatching
-            if (tensor.type === 'circle') {
-                this.drawHatching(0, 0, tensor.radius, tensor.color);
-            } else {
-                // Draw hatching for rectangles
-                this.drawRectangleHatching(0, 0, tensor.width, tensor.height, tensor.color);
-            }
-            
             this.ctx.restore();
+            
+            // Draw tensor hatching in world coordinates (absolute angle)
+            if (tensor.type === 'circle') {
+                this.drawHatching(tensor.x, tensor.y, tensor.radius, tensor.color);
+            } else {
+                // For rectangles, we need to handle rotation for clipping
+                this.drawRotatedRectangleHatching(tensor.x, tensor.y, tensor.width, tensor.height, tensor.rotation, tensor.color);
+            }
             
             // Draw tensor name at center if it exists
             if (tensor.name) {
@@ -2157,10 +2389,22 @@ class TensorLegDrawer {
                 
                 const legSize = dynamicLegRadius * 2;
                 
+                // Determine leg color based on threshold
+                let legColor = tensor.color; // Default to tensor color
+                let borderColor = '#000000';
+                
+                if (leg.number <= tensor.legThreshold) {
+                    legColor = '#4ecdc4'; // Teal for out-legs
+                    borderColor = '#006666';
+                } else {
+                    legColor = '#ff6b6b'; // Red for in-legs
+                    borderColor = '#cc0000';
+                }
+                
                 // Leg square
-                this.ctx.fillStyle = tensor.color;
+                this.ctx.fillStyle = legColor;
                 this.ctx.fillRect(leg.x - dynamicLegRadius, leg.y - dynamicLegRadius, legSize, legSize);
-                this.ctx.strokeStyle = '#000000';
+                this.ctx.strokeStyle = borderColor;
                 this.ctx.lineWidth = 2;
                 this.ctx.strokeRect(leg.x - dynamicLegRadius, leg.y - dynamicLegRadius, legSize, legSize);
                 
@@ -2756,6 +3000,7 @@ class TensorLegDrawer {
                 this.bonds = data.bonds || [];
                 this.freeNodes = data.freeNodes || [];
                 this.nextNodeNumber = data.nextNodeNumber || 1;
+                this.nextTensorNumber = data.nextTensorNumber || 1;
                 this.zoom = data.zoom || 1;
                 this.panX = data.panX || 0;
                 this.panY = data.panY || 0;
@@ -2787,6 +3032,7 @@ class TensorLegDrawer {
             bonds: this.bonds,
             freeNodes: this.freeNodes,
             nextNodeNumber: this.nextNodeNumber,
+            nextTensorNumber: this.nextTensorNumber,
             zoom: this.zoom,
             panX: this.panX,
             panY: this.panY
@@ -2804,6 +3050,7 @@ class TensorLegDrawer {
             bonds: JSON.parse(JSON.stringify(this.bonds)),
             freeNodes: JSON.parse(JSON.stringify(this.freeNodes)),
             nextNodeNumber: this.nextNodeNumber,
+            nextTensorNumber: this.nextTensorNumber,
             zoom: this.zoom,
             panX: this.panX,
             panY: this.panY
@@ -2828,6 +3075,7 @@ class TensorLegDrawer {
         this.bonds = JSON.parse(JSON.stringify(state.bonds));
         this.freeNodes = JSON.parse(JSON.stringify(state.freeNodes));
         this.nextNodeNumber = state.nextNodeNumber;
+        this.nextTensorNumber = state.nextTensorNumber || 1;
         this.zoom = state.zoom;
         this.panX = state.panX;
         this.panY = state.panY;
@@ -3287,11 +3535,25 @@ class TensorLegDrawer {
     }
     
     assignNamesToUnnamedTensors() {
+        // Find all existing T# names to avoid conflicts
+        const existingNames = new Set();
+        for (const tensor of this.tensors) {
+            if (tensor.name && tensor.name.match(/^T\d+$/)) {
+                existingNames.add(tensor.name);
+            }
+        }
+        
         let tensorCounter = 1;
         let hasChanges = false;
         for (const tensor of this.tensors) {
             if (!tensor.name) {
-                tensor.name = `T${tensorCounter++}`;
+                // Find the next available T# number
+                while (existingNames.has(`T${tensorCounter}`)) {
+                    tensorCounter++;
+                }
+                tensor.name = `T${tensorCounter}`;
+                existingNames.add(tensor.name); // Add to set to avoid conflicts with subsequent tensors
+                tensorCounter++;
                 hasChanges = true;
             }
         }

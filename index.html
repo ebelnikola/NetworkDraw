@@ -48,7 +48,7 @@
                             <rect x="3" y="3" width="18" height="18"/>
                         </svg>
                     </button>
-                    <button id="bondTool" class="tool-btn" title="Create Bond or Leg" style="background:#333; border:1px solid #555; color:#ccc; padding:6px; border-radius:3px; cursor:pointer;">
+                    <button id="bondTool" class="tool-btn" title="Create Bond or Leg (Only in-legs can connect to out-legs)" style="background:#333; border:1px solid #555; color:#ccc; padding:6px; border-radius:3px; cursor:pointer;">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <line x1="4" y1="12" x2="20" y2="12"/>
                             <circle cx="4" cy="12" r="2"/>
@@ -95,6 +95,11 @@
                 <input type="text" id="contextTensorName" placeholder="Tensor name" maxlength="10" style="width:100%; background:#333; color:#ccc; border:1px solid #555; border-radius:4px; padding:4px;">
             </div>
             <div class="context-menu-item" style="margin-bottom:12px;">
+                <label style="color:#ccc; display:block; margin-bottom:4px;">Leg's Separator:</label>
+                <input type="number" id="contextLegThreshold" min="0" value="0" style="width:100%; background:#333; color:#ccc; border:1px solid #555; border-radius:4px; padding:4px;">
+                <span style="font-size:90%; color:#aaa; display:block; margin-top:2px;">(legs ≤ separator are out-legs, legs > separator are in-legs)</span>
+            </div>
+            <div class="context-menu-item" style="margin-bottom:12px;">
                 <label style="color:#ccc; display:block; margin-bottom:4px;">Color:</label>
                 <input type="color" id="contextColor" value="#ffffff" style="width:100%; background:#333; border:1px solid #555; border-radius:4px; padding:2px;">
             </div>
@@ -110,6 +115,9 @@
             </div>
             <div class="context-menu-item" style="margin-bottom:8px;">
                 <button id="reflectHorizontalBtn" class="context-btn full-width" title="Reflect about horizontal axis" style="background:#444; color:#ccc; border:1px solid #666; padding:6px 8px; border-radius:4px; cursor:pointer; width:100%; text-align:left;">Reflect about horizontal axis</button>
+            </div>
+            <div class="context-menu-item" style="margin-bottom:8px;">
+                <button id="conjugateBtn" class="context-btn full-width" title="Conjugate tensor (swap in/out legs and add prime to name)" style="background:#444; color:#ccc; border:1px solid #666; padding:6px 8px; border-radius:4px; cursor:pointer; width:100%; text-align:left;">Conjugate Tensor</button>
             </div>
             <div class="context-menu-item">
                 <button id="deleteCircleBtn" class="delete-btn" style="background:#d32f2f; color:#fff; border:none; padding:6px 8px; border-radius:4px; cursor:pointer; width:100%;">Delete Tensor</button>

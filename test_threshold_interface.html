@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Threshold-Based Leg Classification Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #001484;
+            color: #ccc;
+        }
+        .test-info {
+            background: #222;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .test-info h2 {
+            color: #4ecdc4;
+            margin-top: 0;
+        }
+        .test-info ul {
+            color: #ccc;
+        }
+        .test-info li {
+            margin: 8px 0;
+        }
+        .threshold-example {
+            background: #333;
+            color: #ccc;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-family: monospace;
+            border-left: 4px solid #4ecdc4;
+        }
+        .color-example {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #000;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        .in-leg-example {
+            background-color: #ff6b6b;
+            border-color: #cc0000;
+        }
+        .out-leg-example {
+            background-color: #4ecdc4;
+            border-color: #006666;
+        }
+        .rule-box {
+            background: #2d3748;
+            border: 1px solid #4a5568;
+            border-radius: 6px;
+            padding: 12px;
+            margin: 10px 0;
+        }
+        .rule-box strong {
+            color: #4ecdc4;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-info">
+        <h2>Threshold-Based Leg Classification Interface</h2>
+        <p>The leg classification system has been simplified to use a single threshold value instead of separate lists.</p>
+        
+        <h3>New Simplified Interface:</h3>
+        <ul>
+            <li><strong>Single Control:</strong> One "Leg's Separator" field in the context menu</li>
+            <li><strong>Simple Rule:</strong> Legs ≤ separator are out-legs, legs > separator are in-legs</li>
+            <li><strong>Default Behavior:</strong> Separator = 0, so all legs are in-legs by default</li>
+            <li><strong>Visual Feedback:</strong> Real-time color updates as you change the separator</li>
+            <li><strong>Conjugation:</strong> New "Conjugate Tensor" button to swap in/out legs and add prime to name</li>
+        </ul>
+        
+        <h3>Separator Rule:</h3>
+        <div class="rule-box">
+            <strong>Leg's Separator Rule:</strong><br>
+            • If leg number ≤ separator → <span class="color-example out-leg-example"></span><strong>Out-leg</strong> (Teal)<br>
+            • If leg number > separator → <span class="color-example in-leg-example"></span><strong>In-leg</strong> (Red)
+        </div>
+        
+        <h3>Examples:</h3>
+        
+        <div class="threshold-example">
+            <strong>Separator = 0 (Default):</strong><br>
+            • All legs are in-legs (red)<br>
+            • Legs 1, 2, 3, 4, 5... → All red
+        </div>
+        
+        <div class="threshold-example">
+            <strong>Separator = 2:</strong><br>
+            • Legs 1, 2 → Out-legs (teal)<br>
+            • Legs 3, 4, 5... → In-legs (red)
+        </div>
+        
+        <div class="threshold-example">
+            <strong>Separator = 5:</strong><br>
+            • Legs 1, 2, 3, 4, 5 → Out-legs (teal)<br>
+            • Legs 6, 7, 8... → In-legs (red)
+        </div>
+        
+        <h3>How to Use:</h3>
+        <ol>
+            <li><strong>Create a tensor</strong> using the circle or rectangle tool</li>
+            <li><strong>Right-click</strong> on the tensor to open the context menu</li>
+            <li><strong>Set the separator:</strong> Enter a number in the "Leg's Separator" field</li>
+            <li><strong>Observe changes:</strong> Leg colors update immediately</li>
+            <li><strong>Adjust as needed:</strong> Change the separator to get the desired leg distribution</li>
+            <li><strong>Conjugate tensor:</strong> Click "Conjugate Tensor" to swap in/out legs and add prime to name</li>
+        </ol>
+        
+        <h3>Benefits of the New Interface:</h3>
+        <ul>
+            <li><strong>Simpler:</strong> One field instead of two separate lists</li>
+            <li><strong>Intuitive:</strong> Clear numerical relationship between leg numbers and types</li>
+            <li><strong>Efficient:</strong> Easy to adjust the boundary between in and out legs</li>
+            <li><strong>Consistent:</strong> No gaps or overlaps in leg classification</li>
+            <li><strong>Scalable:</strong> Works with any number of legs</li>
+        </ul>
+        
+        <h3>Contraction Rules (Unchanged):</h3>
+        <ul>
+            <li>✅ <strong>Valid:</strong> In-leg → Out-leg connections</li>
+            <li>❌ <strong>Invalid:</strong> In-leg → In-leg or Out-leg → Out-leg connections</li>
+            <li>🔗 <strong>Free nodes:</strong> Can connect to any leg type</li>
+        </ul>
+        
+        <h3>Technical Changes:</h3>
+        <ul>
+            <li>Replaced <code>inLegs</code> and <code>outLegs</code> arrays with <code>legThreshold</code> number</li>
+            <li>Updated <code>getLegType()</code> to use separator comparison</li>
+            <li>Simplified context menu with single separator input</li>
+            <li>Added <code>conjugateTensor()</code> method for tensor conjugation</li>
+            <li>Added global tensor numbering system for unique names</li>
+            <li>Maintained all existing functionality (copy/paste, save/load, etc.)</li>
+        </ul>
+    </div>
+    
+    <p><strong>Note:</strong> This is a test page. To use the actual feature, open <code>index.html</code> in your browser.</p>
+</body>
+</html> 

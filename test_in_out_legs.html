@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>In-Legs and Out-Legs Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #001484;
+            color: #ccc;
+        }
+        .test-info {
+            background: #222;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .test-info h2 {
+            color: #4ecdc4;
+            margin-top: 0;
+        }
+        .test-info ul {
+            color: #ccc;
+        }
+        .test-info li {
+            margin: 8px 0;
+        }
+        .color-example {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #000;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        .in-leg-example {
+            background-color: #ff6b6b;
+            border-color: #cc0000;
+        }
+        .out-leg-example {
+            background-color: #4ecdc4;
+            border-color: #006666;
+        }
+        .default-leg-example {
+            background-color: #ffffff;
+            border-color: #000000;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-info">
+        <h2>In-Legs and Out-Legs Feature Test</h2>
+        <p>This feature has been successfully implemented in the NetworkDraw application. Here's what was added:</p>
+        
+        <h3>New Features:</h3>
+        <ul>
+            <li><strong>Leg Classification:</strong> Tensor legs can now be classified as "in-legs" or "out-legs" using a threshold</li>
+            <li><strong>Default Behavior:</strong> When a tensor is created, all legs are "in-legs" by default (threshold = 0)</li>
+            <li><strong>Visual Differentiation:</strong> 
+                <span class="color-example in-leg-example"></span>In-legs are shown in <strong>red</strong>
+                <br>
+                <span class="color-example out-leg-example"></span>Out-legs are shown in <strong>teal</strong>
+            </li>
+            <li><strong>Context Menu:</strong> Right-click on any tensor to access the "Leg Threshold" field</li>
+            <li><strong>Threshold Rule:</strong> Legs with numbers ≤ threshold are out-legs, legs with numbers > threshold are in-legs</li>
+        </ul>
+        
+        <h3>How to Test:</h3>
+        <ol>
+            <li>Open the main NetworkDraw application (index.html)</li>
+            <li>Create a tensor using the circle or rectangle tool</li>
+            <li>Right-click on the tensor to open the context menu</li>
+            <li>In the "Leg Threshold" field, enter a number (e.g., "2")</li>
+            <li>Observe that legs 1 and 2 become teal (out-legs) and legs 3+ become red (in-legs)</li>
+            <li>Try changing the threshold and see how the leg colors update</li>
+            <li>Try changing the number of legs and see that the threshold is preserved (capped at leg count)</li>
+        </ol>
+        
+        <h3>Technical Implementation:</h3>
+        <ul>
+            <li>Added <code>legThreshold</code> property to tensor objects</li>
+            <li>Updated context menu with single threshold input field</li>
+            <li>Modified rendering to show different colors based on threshold</li>
+            <li>Updated copy/paste functionality to preserve threshold</li>
+            <li>Added persistence through save/load functionality</li>
+            <li>Simplified leg type determination using threshold comparison</li>
+        </ul>
+    </div>
+    
+    <p><strong>Note:</strong> This is a test page. To use the actual feature, open <code>index.html</code> in your browser.</p>
+</body>
+</html> 
