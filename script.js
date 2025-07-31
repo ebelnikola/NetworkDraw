@@ -357,20 +357,20 @@ class TensorLegDrawer {
         }
     }
     
-    // Show error message for invalid contractions
-    showContractionError(firstLegType, secondLegType, secondLegNumber) {
+    // Show warning message for potentially problematic contractions
+    showContractionWarning(firstLegType, secondLegType, secondLegNumber) {
         const firstLegNumber = this.firstLegForBond.leg.number;
         
-        const message = `Invalid contraction: Cannot connect ${firstLegType}-leg (${firstLegNumber}) to ${secondLegType}-leg (${secondLegNumber}). Only in-legs can be connected to out-legs.`;
+        const message = `Warning: You are trying to connect ${firstLegType}-leg (${firstLegNumber}) to ${secondLegType}-leg (${secondLegNumber}). This may lead to problems as typically in-legs should be connected to out-legs.`;
         
-        // Create a temporary error message overlay
-        const errorDiv = document.createElement('div');
-        errorDiv.style.cssText = `
+        // Create a temporary warning message overlay
+        const warningDiv = document.createElement('div');
+        warningDiv.style.cssText = `
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: #d32f2f;
+            background: #ff9800;
             color: white;
             padding: 20px;
             border-radius: 8px;
@@ -394,14 +394,14 @@ class TensorLegDrawer {
             }
         `;
         
-        errorDiv.textContent = message;
+        warningDiv.textContent = message;
         document.head.appendChild(style);
-        document.body.appendChild(errorDiv);
+        document.body.appendChild(warningDiv);
         
-        // Remove the error message after 3 seconds
+        // Remove the warning message after 3 seconds
         setTimeout(() => {
-            if (errorDiv.parentNode) {
-                errorDiv.parentNode.removeChild(errorDiv);
+            if (warningDiv.parentNode) {
+                warningDiv.parentNode.removeChild(warningDiv);
             }
             if (style.parentNode) {
                 style.parentNode.removeChild(style);
@@ -430,18 +430,14 @@ class TensorLegDrawer {
                 const firstLegType = this.getLegType(this.firstLegForBond.tensor, this.firstLegForBond.leg);
                 const secondLegType = this.getLegType(tensor, leg);
                 
-                // Only allow contractions between in and out legs
+                // Check for potentially problematic contractions (in-in or out-out)
                 if ((firstLegType === 'in' && secondLegType === 'in') || 
                     (firstLegType === 'out' && secondLegType === 'out')) {
-                    // Show error message for invalid contraction
-                    this.showContractionError(firstLegType, secondLegType, leg.number);
+                    // Show warning message for potentially problematic contraction
+                    this.showContractionWarning(firstLegType, secondLegType, leg.number);
                     
-                    // Reset bond creation state
-                    this.firstLegForBond = null;
-                    this.previewBondEnd = null;
-                    this.bondToDelete = null;
-                    this.render();
-                    return;
+                    // Continue with bond creation despite the warning
+                    // (don't return here, let the bond be created)
                 }
 
                 // Delete any existing bond from the source leg
