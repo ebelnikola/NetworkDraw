@@ -36,7 +36,7 @@ Inspired by [TensorTrace](https://www.tensortrace.com/).
 - **Scaling Exponents**: Define scaling behavior (χ^n) for bonds
 - **Curved Connections**: Bonds automatically curve for better visualization
 - **Connection Validation**: Ensure proper tensor leg connections
-- **Contraction Rules**: Only allow connections between in-legs and out-legs (prevents in-in and out-out connections)
+- **Contraction Rules**: Allow connections between in-legs and out-legs (warnings for in-in and out-out connections)
 
 ## How to Use
 
