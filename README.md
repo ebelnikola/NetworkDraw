@@ -21,7 +21,7 @@ Inspired by [TensorTrace](https://www.tensortrace.com/).
 ## Getting Started
 
 ### Opening the Application
-1. Open `index.html` in your web browser
+1. Go [here](https://ebelnikola.github.io/NetworkDraw/) in your web browser
 2. You'll see a dark blue grid background with tools at the top
 3. The application automatically loads your last saved diagram
 
