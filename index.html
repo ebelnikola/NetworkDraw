@@ -32,11 +32,11 @@
                 <div style="display:flex; align-items:center; gap:10px;">
                     <div class="tool-group" style="display:flex; align-items:center; gap:5px;">
                         <label for="nodeCount" style="color:#ccc; font-size:14px;">Legs:</label>
-                        <input type="number" id="nodeCount" min="1" max="20" value="4" style="width:50px; background:#333; color:#ccc; border:1px solid #555; border-radius:3px; padding:2px 4px;">
+                        <input type="number" id="nodeCount" min="1" value="4" style="width:50px; background:#333; color:#ccc; border:1px solid #555; border-radius:3px; padding:2px 4px;">
                     </div>
                     <div class="tool-group" style="display:flex; align-items:center; gap:5px;">
                         <label for="tensorName" style="color:#ccc; font-size:14px;">Name:</label>
-                        <input type="text" id="tensorName" placeholder="Tensor name" maxlength="10" style="width:80px; background:#333; color:#ccc; border:1px solid #555; border-radius:3px; padding:2px 4px;">
+                        <input type="text" id="tensorName" placeholder="Tensor name" style="width:80px; background:#333; color:#ccc; border:1px solid #555; border-radius:3px; padding:2px 4px;">
                     </div>
                     <button id="circleTool" class="tool-btn active" title="Draw Circular Tensor" style="background:#333; border:1px solid #555; color:#ccc; padding:6px; border-radius:3px; cursor:pointer;">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -88,11 +88,11 @@
         <div id="contextMenu" class="context-menu" style="display:none; position:absolute; z-index:1000; background:#222; color:#ccc; border-radius:8px; box-shadow:0 2px 8px #000a; padding:16px; min-width:200px;">
             <div class="context-menu-item" style="margin-bottom:12px;">
                 <label style="color:#ccc; display:block; margin-bottom:4px;">Legs:</label>
-                <input type="number" id="contextNodeCount" min="1" max="20" value="4" style="width:100%; background:#333; color:#ccc; border:1px solid #555; border-radius:4px; padding:4px;">
+                <input type="number" id="contextNodeCount" min="1" value="4" style="width:100%; background:#333; color:#ccc; border:1px solid #555; border-radius:4px; padding:4px;">
             </div>
             <div class="context-menu-item" style="margin-bottom:12px;">
                 <label style="color:#ccc; display:block; margin-bottom:4px;">Name:</label>
-                <input type="text" id="contextTensorName" placeholder="Tensor name" maxlength="10" style="width:100%; background:#333; color:#ccc; border:1px solid #555; border-radius:4px; padding:4px;">
+                <input type="text" id="contextTensorName" placeholder="Tensor name" style="width:100%; background:#333; color:#ccc; border:1px solid #555; border-radius:4px; padding:4px;">
             </div>
             <div class="context-menu-item" style="margin-bottom:12px;">
                 <label style="color:#ccc; display:block; margin-bottom:4px;">Leg's Separator:</label>
@@ -130,9 +130,13 @@
                 <input type="color" id="bondColorPicker" value="#ffffff" style="width:100%; background:#333; border:1px solid #555; border-radius:4px; padding:2px;">
             </div>
             <div style="margin-bottom:12px;">
-                <label for="bondExponentInput" style="color:#ccc; display:block; margin-bottom:4px;">Dimension exponent n:</label>
-                <input type="number" id="bondExponentInput" value="1" min="-10" max="10" step="1" style="width:100%; background:#333; color:#ccc; border:1px solid #555; border-radius:4px; padding:4px;">
-                <span style="font-size:90%; color:#aaa; display:block; margin-top:2px;">(scales as χ<sup>n</sup>)</span>
+                <label for="bondScalingInput" style="color:#ccc; display:block; margin-bottom:4px;">Scaling:</label>
+                <div style="display:flex; align-items:center; gap:4px; background:#333; border:1px solid #555; border-radius:4px; padding:4px;">
+                    <input type="text" id="bondPrefactorInput" value="1" style="width:60px; background:#333; color:#ccc; border:none; padding:2px; text-align:right; -moz-appearance: textfield; -webkit-appearance: textfield; appearance: textfield;">
+                    <span style="color:#ccc; font-family:serif;">χ</span>
+                    <input type="text" id="bondExponentInput" value="1" style="width:60px; background:#333; color:#ccc; border:none; padding:2px; text-align:left; -moz-appearance: textfield; -webkit-appearance: textfield; appearance: textfield;">
+                </div>
+                <span style="font-size:90%; color:#aaa; display:block; margin-top:2px;">(scales as a*χ^b)</span>
             </div>
             <button id="deleteBondBtn" style="background:#d32f2f; color:#fff; border:none; padding:6px 8px; border-radius:4px; cursor:pointer; width:100%; margin-bottom:8px;">Delete Bond</button>
             <button id="closeBondContextMenuBtn" style="background:#444; color:#ccc; border:1px solid #666; padding:6px 8px; border-radius:4px; cursor:pointer; width:100%;">Close</button>

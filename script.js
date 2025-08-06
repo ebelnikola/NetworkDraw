@@ -60,6 +60,7 @@ class TensorLegDrawer {
         // 1. Add to constructor:
         this.defaultBondColor = '#ffffff';
         this.defaultBondExponent = 1;
+        this.defaultBondPrefactor = 1;
         
         // 1. Add to constructor:
         this.selectedBonds = [];
@@ -106,11 +107,24 @@ class TensorLegDrawer {
             }
         });
         document.getElementById('bondExponentInput').addEventListener('input', (e) => {
-            const val = parseInt(e.target.value, 10) || 1;
-            if (this.selectedBonds.length > 0) {
-                this.selectedBonds.forEach(b => b.exponent = val);
-                this.defaultBondExponent = val;
-                this.render();
+            const val = parseFloat(e.target.value);
+            if (!isNaN(val)) {
+                if (this.selectedBonds.length > 0) {
+                    this.selectedBonds.forEach(b => b.exponent = val);
+                    this.defaultBondExponent = val;
+                    this.render();
+                }
+            }
+        });
+        
+        document.getElementById('bondPrefactorInput').addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            if (!isNaN(val)) {
+                if (this.selectedBonds.length > 0) {
+                    this.selectedBonds.forEach(b => b.prefactor = val);
+                    this.defaultBondPrefactor = val;
+                    this.render();
+                }
             }
         });
         document.getElementById('deleteBondBtn').addEventListener('click', () => {
@@ -154,7 +168,8 @@ class TensorLegDrawer {
         this.showBondContextMenu = (pageX, pageY, bond) => {
             this.bondContextMenuBond = bond;
             document.getElementById('bondColorPicker').value = bond.color || '#ffffff';
-            document.getElementById('bondExponentInput').value = bond.exponent || 1;
+            document.getElementById('bondExponentInput').value = bond.exponent !== undefined ? bond.exponent : 1;
+            document.getElementById('bondPrefactorInput').value = bond.prefactor !== undefined ? bond.prefactor : 1;
             this.bondContextMenu.style.left = pageX + 'px';
             this.bondContextMenu.style.top = pageY + 'px';
             this.bondContextMenu.style.display = 'block';
@@ -466,6 +481,7 @@ class TensorLegDrawer {
                     leg2: { tensor, leg },
                     color: this.defaultBondColor,
                     exponent: this.defaultBondExponent,
+                    prefactor: this.defaultBondPrefactor,
                     controlPoints: [] // Array to store control points
                 };
                 
@@ -3118,15 +3134,18 @@ class TensorLegDrawer {
     }
     
     generateTensorOperationsCode() {
-        // Step 1: Assign global numbers to all nodes
+        // Step 1: Assign global numbers to all connected legs
         const nodeMapping = this.assignGlobalNodeNumbers();
+        
+        // Debug: Log the mapping for verification
+        this.debugNodeMapping(nodeMapping);
         
         // Step 2: Generate the tensor operation code
         return this.buildTensorOperationCode(nodeMapping);
     }
     
     assignGlobalNodeNumbers() {
-        const nodeMapping = new Map(); // Maps (tensorId, legId) or freeNodeId to global number
+        const nodeMapping = new Map(); // Maps (tensorId, legNumber) to global number
         let nextGlobalNumber = 1;
         
         // First, assign numbers to connected nodes (nodes connected by bonds)
@@ -3213,7 +3232,7 @@ class TensorLegDrawer {
     
     getNodeKey(node) {
         if (node.tensor && node.leg) {
-            // Tensor leg
+            // Use tensor ID and leg ID (stable identifier) for consistent mapping
             return `tensor_${node.tensor.id}_leg_${node.leg.id}`;
         } else if (node.id && !node.tensor) {
             // Free node
@@ -3258,12 +3277,22 @@ class TensorLegDrawer {
             // Calculate total power (number of bonds with this global number)
             const power = sameNumberBonds.length;
             
-            // Calculate the total exponent from all bonds in this connected component
+            // Calculate the total exponent and prefactor from all bonds in this connected component
             const totalExponent = this.calculateTotalExponent(sameNumberBonds);
+            const totalPrefactor = this.calculateTotalPrefactor(sameNumberBonds);
             
-            // Build the specification - combine power and exponent
+            // Build the specification - combine power, prefactor and exponent
             const finalPower = power * totalExponent;
-            const spec = `${globalNumber}=>χ^${finalPower}`;
+            const finalPrefactor = Math.pow(totalPrefactor, power);
+            
+            let spec;
+            if (finalPrefactor === 1) {
+                spec = `${globalNumber}=>χ^${finalPower}`;
+            } else if (finalPower === 0) {
+                spec = `${globalNumber}=>${finalPrefactor}`;
+            } else {
+                spec = `${globalNumber}=>${finalPrefactor}*χ^${finalPower}`;
+            }
             bondSpecs.push(spec);
             
             // Mark all bonds with this number as processed
@@ -3280,13 +3309,22 @@ class TensorLegDrawer {
     
     calculateTotalExponent(bonds) {
         // Calculate the total exponent from all bonds in a connected component
-        // This represents the combined scaling behavior of all bonds with the same global number
         let totalExponent = 0;
         for (const bond of bonds) {
-            const exponent = bond.exponent || 1;
+            const exponent = bond.exponent !== undefined ? bond.exponent : 1;
             totalExponent += exponent;
         }
         return totalExponent;
+    }
+    
+    calculateTotalPrefactor(bonds) {
+        // Calculate the total prefactor from all bonds in a connected component
+        let totalPrefactor = 1;
+        for (const bond of bonds) {
+            const prefactor = bond.prefactor !== undefined ? bond.prefactor : 1;
+            totalPrefactor *= prefactor;
+        }
+        return totalPrefactor;
     }
     
     buildTensorProducts(nodeMapping) {
@@ -3297,7 +3335,10 @@ class TensorLegDrawer {
             const tensorName = tensor.name || `T${tensorCounter++}`;
             const legIndices = [];
             
-            for (const leg of tensor.legs) {
+            // Sort legs by their number to ensure correct order in tensor notation
+            const sortedLegs = [...tensor.legs].sort((a, b) => a.number - b.number);
+            
+            for (const leg of sortedLegs) {
                 const legKey = this.getNodeKey({ tensor, leg });
                 const globalNumber = nodeMapping.get(legKey);
                 
@@ -3336,6 +3377,22 @@ class TensorLegDrawer {
         }
         
         return freeLegNumbers.join(',');
+    }
+    
+    debugNodeMapping(nodeMapping) {
+        console.log('=== Node Mapping Debug ===');
+        for (const [key, value] of nodeMapping.entries()) {
+            console.log(`${key} -> ${value}`);
+        }
+        console.log('=== Bond Connections ===');
+        for (const bond of this.bonds) {
+            const leg1Key = this.getNodeKey(bond.leg1);
+            const leg2Key = this.getNodeKey(bond.leg2);
+            console.log(`Bond: ${bond.leg1.tensor.name || 'T'}.leg${bond.leg1.leg.number} <-> ${bond.leg2.tensor ? (bond.leg2.tensor.name || 'T') + '.leg' + bond.leg2.leg.number : 'free' + bond.leg2.freeNode.number}`);
+            console.log(`  Keys: ${leg1Key} <-> ${leg2Key}`);
+            console.log(`  Global numbers: ${nodeMapping.get(leg1Key)} <-> ${nodeMapping.get(leg2Key)}`);
+        }
+        console.log('========================');
     }
     
     showCodeDialog(code) {
