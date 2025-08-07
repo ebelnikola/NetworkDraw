@@ -3265,38 +3265,70 @@ class TensorLegDrawer {
         const bondSpecs = [];
         const processedBonds = new Set();
         
+        // Process bonds (connections between tensor legs)
         for (const bond of this.bonds) {
             if (processedBonds.has(bond)) continue;
             
-            // Find all bonds with the same global number
-            const globalNumber = this.getGlobalNumberForBond(bond, nodeMapping);
-            const sameNumberBonds = this.bonds.filter(b => 
-                this.getGlobalNumberForBond(b, nodeMapping) === globalNumber
-            );
-            
-            // Calculate total power (number of bonds with this global number)
-            const power = sameNumberBonds.length;
-            
-            // Calculate the total exponent and prefactor from all bonds in this connected component
-            const totalExponent = this.calculateTotalExponent(sameNumberBonds);
-            const totalPrefactor = this.calculateTotalPrefactor(sameNumberBonds);
-            
-            // Build the specification - combine power, prefactor and exponent
-            const finalPower = power * totalExponent;
-            const finalPrefactor = Math.pow(totalPrefactor, power);
-            
-            let spec;
-            if (finalPrefactor === 1) {
-                spec = `${globalNumber}=>χ^${finalPower}`;
-            } else if (finalPower === 0) {
-                spec = `${globalNumber}=>${finalPrefactor}`;
-            } else {
-                spec = `${globalNumber}=>${finalPrefactor}*χ^${finalPower}`;
+            // Only process bonds that connect two tensor legs (not free nodes)
+            if (bond.leg1.tensor && bond.leg2.tensor) {
+                // Find all bonds with the same global number
+                const globalNumber = this.getGlobalNumberForBond(bond, nodeMapping);
+                const sameNumberBonds = this.bonds.filter(b => 
+                    this.getGlobalNumberForBond(b, nodeMapping) === globalNumber &&
+                    b.leg1.tensor && b.leg2.tensor // Only tensor-to-tensor bonds
+                );
+                
+                // Calculate the total exponent and prefactor from all bonds in this connected component
+                const totalExponent = this.calculateTotalExponent(sameNumberBonds);
+                const totalPrefactor = this.calculateTotalPrefactor(sameNumberBonds);
+                
+                // Build the specification - combine prefactor and exponent
+                const finalPower = totalExponent;
+                const finalPrefactor = totalPrefactor;
+                
+                let spec;
+                if (finalPrefactor === 1) {
+                    spec = `${globalNumber}=>χ^${finalPower}`;
+                } else if (finalPower === 0) {
+                    spec = `${globalNumber}=>${finalPrefactor}`;
+                } else {
+                    spec = `${globalNumber}=>${finalPrefactor}*χ^${finalPower}`;
+                }
+                bondSpecs.push(spec);
+                
+                // Mark all bonds with this number as processed
+                sameNumberBonds.forEach(b => processedBonds.add(b));
             }
-            bondSpecs.push(spec);
-            
-            // Mark all bonds with this number as processed
-            sameNumberBonds.forEach(b => processedBonds.add(b));
+        }
+        
+        // Process free legs (legs connected to free nodes)
+        for (const tensor of this.tensors) {
+            for (const leg of tensor.legs) {
+                // Check if this leg is connected to a free node
+                const connectedFreeNode = this.findConnectedFreeNode(tensor, leg);
+                if (connectedFreeNode) {
+                    // Find the bond that connects this leg to the free node
+                    const bond = this.findBondToFreeNode(tensor, leg);
+                    if (bond) {
+                        // Get the scaling properties from the bond
+                        const exponent = bond.exponent !== undefined ? bond.exponent : 1;
+                        const prefactor = bond.prefactor !== undefined ? bond.prefactor : 1;
+                        
+                        let spec;
+                        if (prefactor === 1) {
+                            spec = `-${connectedFreeNode.number}=>χ^${exponent}`;
+                        } else if (exponent === 0) {
+                            spec = `-${connectedFreeNode.number}=>${prefactor}`;
+                        } else {
+                            spec = `-${connectedFreeNode.number}=>${prefactor}*χ^${exponent}`;
+                        }
+                        bondSpecs.push(spec);
+                    } else {
+                        // Default χ dimension if no bond found
+                        bondSpecs.push(`-${connectedFreeNode.number}=>χ`);
+                    }
+                }
+            }
         }
         
         return bondSpecs.join(', ');
@@ -3369,6 +3401,18 @@ class TensorLegDrawer {
         return null;
     }
     
+    findBondToFreeNode(tensor, leg) {
+        for (const bond of this.bonds) {
+            if (bond.leg1.tensor === tensor && bond.leg1.leg === leg && bond.leg2.freeNode) {
+                return bond;
+            }
+            if (bond.leg2.tensor && bond.leg2.tensor === tensor && bond.leg2.leg === leg && bond.leg1.freeNode) {
+                return bond;
+            }
+        }
+        return null;
+    }
+    
     buildFreeLegIndices(nodeMapping) {
         const freeLegNumbers = [];
         
@@ -3391,6 +3435,11 @@ class TensorLegDrawer {
             console.log(`Bond: ${bond.leg1.tensor.name || 'T'}.leg${bond.leg1.leg.number} <-> ${bond.leg2.tensor ? (bond.leg2.tensor.name || 'T') + '.leg' + bond.leg2.leg.number : 'free' + bond.leg2.freeNode.number}`);
             console.log(`  Keys: ${leg1Key} <-> ${leg2Key}`);
             console.log(`  Global numbers: ${nodeMapping.get(leg1Key)} <-> ${nodeMapping.get(leg2Key)}`);
+            console.log(`  Bond properties: prefactor=${bond.prefactor}, exponent=${bond.exponent}`);
+        }
+        console.log('=== Free Nodes ===');
+        for (const freeNode of this.freeNodes) {
+            console.log(`Free node ${freeNode.number} (ID: ${freeNode.id})`);
         }
         console.log('========================');
     }
